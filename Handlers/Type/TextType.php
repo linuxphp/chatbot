@@ -1,0 +1,33 @@
+<?php
+
+namespace ChatBot\Handlers\Type;
+
+use Carbon\Carbon;
+use Hanson\Vbot\Contact\Friends;
+use Hanson\Vbot\Contact\Groups;
+use Hanson\Vbot\Message\Text;
+use Hanson\Vbot\Support\File;
+use Illuminate\Support\Collection;
+
+class TextType
+{
+    public static function messageHandler(Collection $message, Friends $friends, Groups $groups)
+    {
+        if ($message['type'] === 'text') {
+            if ($message['content'] === 'time') {
+                $datetime = Carbon::parse(vbot('config')->get('server.time'));
+                Text::send($message['from']['UserName'], 'Running:'.$datetime->diffInHours().'小时');
+            }
+
+            if ($message['content'] === '拉我') {
+                $username = $groups->getUsernameByNickname('chatBot 体验群');
+                $groups->addMember($username, $message['from']['UserName']);
+            }
+
+            if ($message['content'] === '头像') {
+                $avatar = $friends->getAvatar($message['from']['UserName']);
+                File::saveTo(vbot('config')['user_path'].'avatar/'.$message['from']['UserName'].'.jpg', $avatar);
+            }
+        }
+    }
+}
